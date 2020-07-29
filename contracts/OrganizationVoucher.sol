@@ -297,4 +297,6 @@ contract OrganizationVoucher is MintableToken {
     string public constant symbol = "OrganizationVoucher";
     uint8 public constant decimals = 18;
 
+
+
 }

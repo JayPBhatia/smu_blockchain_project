@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-contract Organization is ERC721{
+
+contract Organization {
 
 
  enum orgState { verified, invalid }
@@ -52,13 +52,12 @@ contract Organization is ERC721{
 
         uint256 newOrgId = numOrgs++;
         organizations[newOrgId] = newOrg;   //commit to state variable
-        _mint(msg.sender, newOrgId); //create new Organization using _mint()
         return newOrgId;             //return new OrgId
     }
 
     //modifier to ensure a function is callable only by its owner
     modifier ownerOnly(uint256 orgId) {
-        require(ownerOf(orgId) == msg.sender, "Owner only function");
+        //require(ownerOf(orgId) == msg.sender, "Owner only function");
         _;
     }
 

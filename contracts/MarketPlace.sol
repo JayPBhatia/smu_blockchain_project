@@ -1,18 +1,19 @@
 pragma solidity ^0.5.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Organization.sol";
+import "./OrganizationVoucher.sol";
 
 contract Market {
 
-    Organization orgContract;  //reference to Dice.sol
+    OrganizationVoucher orgVoucherContract;  //reference to Dice.sol
     IERC20 token;       //reference to OrgToken.sol or any ERC20
     uint256 public commissionFee;
     address _owner = msg.sender;
     mapping(uint256 => uint256) listedOrgs;
     //mapping(uint256 => address) prevOwner;
 
-    constructor(Organization orgAddress, IERC20 ercAddress ,uint256 fee) public {
-        orgContract = orgAddress;
+    constructor(OrganizationVoucher orgAddress, IERC20 ercAddress ,uint256 fee) public {
+        orgVoucherContract = orgAddress;
         token = ercAddress;
         //Not sure if we need the commissionFee
         commissionFee = fee;
@@ -21,8 +22,8 @@ contract Market {
    
     //Lists the vouchers from organization on the marketplace
     function listVouchers(uint256 orgId, uint256 tokens) public {
-      require(orgContract.ownerOf(orgId) == msg.sender, "Only owner can list");
-        orgContract.transferFrom(msg.sender, address(this), orgId);
+      //require(orgVoucherContract.ownerOf(orgId) == msg.sender, "Only owner can list");
+        orgVoucherContract.transferFrom(msg.sender, address(this), orgId);
      // prevOwner[diceId] = msg.sender;
       listedOrgs[orgId] = tokens;
     }
