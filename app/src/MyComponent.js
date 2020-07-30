@@ -39,7 +39,7 @@ export default ({ drizzle, drizzleState }) => {
             drizzle={drizzle}
             drizzleState={drizzleState}
             contract="Organization"
-            method="tokenCount"
+            method="numOrgs"
           />
         </p>
         <ContractForm drizzle={drizzle} contract="Organization" method="addTokens" />
