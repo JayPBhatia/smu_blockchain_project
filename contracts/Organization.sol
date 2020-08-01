@@ -73,7 +73,7 @@ contract Organization {
             block.timestamp
         );
 
-//        OrganizationVoucher newOrgVoucher = orgVoucherContract(
+//       voucher memory newOrgVoucher = orgVoucherContract.addVouchers(
 //            name,
 //            symbol,
 //            price,
@@ -97,7 +97,7 @@ contract Organization {
     }
 
     // set the isVerified flag of organization
-    function approve(uint256 orgId) public validOrgId(orgId) {
+    function approve(uint256 orgId) public ownerOnly(orgId) {
         organizations[orgId].isVerified = orgState.verified;
     }
 

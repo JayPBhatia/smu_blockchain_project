@@ -12,11 +12,11 @@ module.exports = function(deployer, networks, accounts) {
   let orgVoucher;
   let fee = 100;
 
-  deployer.deploy(Organization).then((_inst) => {
-    orgInstance = _inst;
-    return deployer.deploy(OrganizationVoucher)
-  }).then((_inst) => {
+  deployer.deploy(OrganizationVoucher, "NTUC" , "NTUC$", 1, 100).then((_inst) => {
     orgVoucher = _inst;
+    return deployer.deploy(Organization, orgVoucher.address)
+  }).then((_inst) => {
+    orgInstance = _inst;
     return deployer.deploy(MarketPlace, orgInstance.address, orgVoucher.address, fee, {from: platform});
   })
 
