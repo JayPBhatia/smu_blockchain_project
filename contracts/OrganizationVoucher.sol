@@ -66,18 +66,28 @@ library SafeMath {
  * @dev Basic version of StandardToken, with no allowances.
  */
 contract BasicToken is ERC20Basic {
+
+    struct voucher{
+        string symbol;
+        string orgName;
+        uint256 price;
+        mapping(address => uint256) balances;
+        uint256 totalSupply_;
+        mapping(address => mapping(address => uint256))  allowed;
+    }
+
+    mapping(string => voucher) public allVouchers;
+
     using SafeMath for uint256;
 
-    mapping(address => uint256) balances;
 
-    uint256 totalSupply_;
     uint256 maxTokens_ = 1000000;
 
     /**
     * @dev total number of tokens in existence
     */
-    function totalSupply() public view returns (uint256) {
-        return totalSupply_;
+    function totalSupply(string memory symbol) public view returns (uint256) {
+        return allVouchers[symbol].totalSupply_;
     }
 
     function setMaxTokens(uint256 max) public {
@@ -92,12 +102,12 @@ contract BasicToken is ERC20Basic {
     * @param _to The address to transfer to.
     * @param _value The amount to be transferred.
     */
-    function transfer(address _to, uint256 _value) public returns (bool) {
+    function transfer(string memory symbol, address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
-        require(_value <= balances[msg.sender]);
+        require(_value <= allVouchers[symbol].balances[msg.sender]);
 
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
+        allVouchers[symbol].balances[msg.sender] = allVouchers[symbol].balances[msg.sender].sub(_value);
+        allVouchers[symbol].balances[_to] = allVouchers[symbol].balances[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
         return true;
     }
@@ -107,8 +117,8 @@ contract BasicToken is ERC20Basic {
     * @param _owner The address to query the the balance of.
     * @return An uint256 representing the amount owned by the passed address.
     */
-    function balanceOf(address _owner) public view returns (uint256) {
-        return balances[_owner];
+    function balanceOf(string memory symbol, address _owner) public view returns (uint256) {
+        return allVouchers[symbol].balances[_owner];
     }
 
 }
@@ -136,7 +146,7 @@ contract ERC20 is ERC20Basic {
  */
 contract StandardToken is ERC20, BasicToken {
 
-    mapping(address => mapping(address => uint256)) internal allowed;
+
 
 
     /**
@@ -145,14 +155,14 @@ contract StandardToken is ERC20, BasicToken {
      * @param _to address The address which you want to transfer to
      * @param _value uint256 the amount of tokens to be transferred
      */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    function transferFrom(string memory symbol, address _from, address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
-        require(_value <= balances[_from]);
-        require(_value <= allowed[_from][msg.sender]);
+        require(_value <= allVouchers[symbol].balances[_from]);
+        require(_value <= allVouchers[symbol].allowed[_from][msg.sender]);
 
-        balances[_from] = balances[_from].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+        allVouchers[symbol].balances[_from] = allVouchers[symbol].balances[_from].sub(_value);
+        allVouchers[symbol].balances[_to] = allVouchers[symbol].balances[_to].add(_value);
+        allVouchers[symbol].allowed[_from][msg.sender] = allVouchers[symbol].allowed[_from][msg.sender].sub(_value);
         emit Transfer(_from, _to, _value);
         return true;
     }
@@ -167,8 +177,8 @@ contract StandardToken is ERC20, BasicToken {
      * @param _spender The address which will spend the funds.
      * @param _value The amount of tokens to be spent.
      */
-    function approve(address _spender, uint256 _value) public returns (bool) {
-        allowed[msg.sender][_spender] = _value;
+    function approve(string memory symbol, address _spender, uint256 _value) public returns (bool) {
+        allVouchers[symbol].allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
@@ -179,8 +189,8 @@ contract StandardToken is ERC20, BasicToken {
      * @param _spender address The address which will spend the funds.
      * @return A uint256 specifying the amount of tokens still available for the spender.
      */
-    function allowance(address _owner, address _spender) public view returns (uint256) {
-        return allowed[_owner][_spender];
+    function allowance(string memory symbol, address _owner, address _spender) public view returns (uint256) {
+        return allVouchers[symbol].allowed[_owner][_spender];
     }
 
     /**
@@ -193,9 +203,9 @@ contract StandardToken is ERC20, BasicToken {
      * @param _spender The address which will spend the funds.
      * @param _addedValue The amount of tokens to increase the allowance by.
      */
-    function increaseApproval(address _spender, uint _addedValue) public returns (bool) {
-        allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    function increaseApproval(string memory symbol, address _spender, uint _addedValue) public returns (bool) {
+        allVouchers[symbol].allowed[msg.sender][_spender] = allVouchers[symbol].allowed[msg.sender][_spender].add(_addedValue);
+        emit Approval(msg.sender, _spender, allVouchers[symbol].allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -209,14 +219,14 @@ contract StandardToken is ERC20, BasicToken {
      * @param _spender The address which will spend the funds.
      * @param _subtractedValue The amount of tokens to decrease the allowance by.
      */
-    function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool) {
-        uint oldValue = allowed[msg.sender][_spender];
+    function decreaseApproval(string memory symbol, address _spender, uint _subtractedValue) public returns (bool) {
+        uint oldValue = allVouchers[symbol].allowed[msg.sender][_spender];
         if (_subtractedValue > oldValue) {
-            allowed[msg.sender][_spender] = 0;
+            allVouchers[symbol].allowed[msg.sender][_spender] = 0;
         } else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
+            allVouchers[symbol].allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
         }
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allVouchers[symbol].allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -286,10 +296,10 @@ contract MintableToken is StandardToken, Ownable {
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address _to, uint256 _amount) onlyOwner canMint public returns (bool) {
-        require(maxTokens_ >= totalSupply_ + _amount , " totalSupply_ + amount more then max allowed  " );
-        totalSupply_ = totalSupply_.add(_amount);
-        balances[_to] = balances[_to].add(_amount);
+    function mint(string memory symbol, address _to, uint256 _amount) onlyOwner canMint public returns (bool) {
+        require(maxTokens_ >= allVouchers[symbol].totalSupply_ + _amount , " totalSupply_ + amount more then max allowed  " );
+        allVouchers[symbol].totalSupply_ = allVouchers[symbol].totalSupply_.add(_amount);
+        allVouchers[symbol].balances[_to] = allVouchers[symbol].balances[_to].add(_amount);
         emit Mint(_to, _amount);
         emit Transfer(address(0), _to, _amount);
         return true;
@@ -308,16 +318,10 @@ contract MintableToken is StandardToken, Ownable {
 
 contract OrganizationVoucher is MintableToken {
 
-    struct voucher{
-        string name;
-        string symbol;
-        uint256 price;
-        uint256 numberOfVouchers;
-    }
     uint8 public constant decimals = 18;
 
-    mapping(string => voucher) public allVouchers;
-    uint256 public numVouchers = 0;
+    mapping(address => uint256) map1;
+    mapping(address => mapping(address => uint256)) map2;
 
     // constructor(string memory name_, string memory symbol_, uint256 price_, uint256 numberOfVouchers) public {
     //     require(maxTokens_ >= totalSupply_ + numberOfVouchers, " current totalSupply_ + numberOfVouchers more then max allowed  " );
@@ -327,18 +331,20 @@ contract OrganizationVoucher is MintableToken {
     //     totalSupply_ = totalSupply_.add(numberOfVouchers);
     // }
 
-    function addVoucher( string memory name, string memory symbol, uint256 price, uint256 numberOfVouchers) public returns (uint256) {
+    function addVoucher( string memory name, string memory symbol, uint256 price, uint256 numberOfVouchers) public  {
         //new voucher object
-        require(maxTokens_ >= totalSupply_ + numberOfVouchers, " current totalSupply_ + numberOfVouchers more then max allowed.");
+        require(maxTokens_ >= allVouchers[symbol].totalSupply_ + numberOfVouchers, " current totalSupply_ + numberOfVouchers more then max allowed.");
+
+
         voucher memory newOrgVoucher = voucher(
-            name,
-            symbol,
-            price,
-            numberOfVouchers
+        symbol,
+        name,
+        price,
+        map1,
+        numberOfVouchers,
+        map2
         );
-        uint256 voucherId = numVouchers++;
         allVouchers[symbol] = newOrgVoucher;
-        return voucherId;
 
     }
 
