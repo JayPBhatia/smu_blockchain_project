@@ -71,6 +71,7 @@ contract BasicToken is ERC20Basic {
     mapping(address => uint256) balances;
 
     uint256 totalSupply_;
+    uint256 maxTokens_ = 1000000;
 
     /**
     * @dev total number of tokens in existence
@@ -79,6 +80,13 @@ contract BasicToken is ERC20Basic {
         return totalSupply_;
     }
 
+    function setMaxTokens(uint256 max) public {
+        maxTokens_ = max;
+    }
+
+    function getMaxTokens(uint256 max) public view returns (uint256) {
+        return maxTokens_;
+    }
     /**
     * @dev transfer token for a specified address
     * @param _to The address to transfer to.
@@ -279,6 +287,7 @@ contract MintableToken is StandardToken, Ownable {
      * @return A boolean that indicates if the operation was successful.
      */
     function mint(address _to, uint256 _amount) onlyOwner canMint public returns (bool) {
+        require(maxTokens_ >= totalSupply_ + _amount , " totalSupply_ + amount more then max allowed  " );
         totalSupply_ = totalSupply_.add(_amount);
         balances[_to] = balances[_to].add(_amount);
         emit Mint(_to, _amount);
@@ -299,9 +308,19 @@ contract MintableToken is StandardToken, Ownable {
 
 contract OrganizationVoucher is MintableToken {
 
-    string public constant name = "Organization Voucher";
-    string public constant symbol = "OrganizationVoucher";
+    string public name;
+    string public symbol;
+    uint256 public price;
     uint8 public constant decimals = 18;
+
+    constructor(string memory name_, string memory symbol_, uint256 price_, uint256 numberOfVouchers) public {
+        require(maxTokens_ >= totalSupply_ + numberOfVouchers , " current totalSupply_ + numberOfVouchers more then max allowed  " );
+        name = name_;
+        symbol =  symbol_;
+        price = price_;
+        totalSupply_ = totalSupply_.add(numberOfVouchers);
+    }
+
 
 
 }

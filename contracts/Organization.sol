@@ -1,13 +1,21 @@
 pragma solidity ^0.5.0;
+import "./OrganizationVoucher.sol";
 
 contract Organization {
+
+    OrganizationVoucher orgVoucherContract;  //reference to OrganizationVoucher
+    constructor( OrganizationVoucher orgVoucherAddress) public {
+        orgVoucherContract = orgVoucherAddress;
+    }
 
     enum orgState {verified, invalid}
 
     struct organization {
         string name;
-        address owner;
-        uint256 numberOfTokens;
+        string symbol;
+        uint256 price;
+        address payable owner;
+        uint256 numberOfVouchers;
         orgState isVerified;
         uint256 creationDate;
     }
@@ -29,12 +37,14 @@ contract Organization {
         _;
     }
 
-    function addTokens(uint256 orgId, uint256 x) public ownerOnly(orgId)  {
-        organizations[orgId].numberOfTokens  += x;
+    function addVouchers(uint256 orgId, uint256 x) public ownerOnly(orgId)  {
+        organizations[orgId].numberOfVouchers  += x;
+        // TODO call voucher add
     }
 
-    function burnTokens(uint256 orgId, uint256 x) public ownerOnly(orgId) {
-        organizations[orgId].numberOfTokens  -= x;
+    function burnVouchers(uint256 orgId, uint256 x) public ownerOnly(orgId) {
+        organizations[orgId].numberOfVouchers  -= x;
+        // TODO call voucher burn
     }
 
     function issueTokens(uint256 orgId, uint256 x) public ownerOnly(orgId) payable {
@@ -44,21 +54,33 @@ contract Organization {
 
     //function to create a new Orgnization, and add to 'organizations' map. requires at least 0.01ETH to create
     function add(
-        uint8 numberOfTokens,
-        string memory name
+        uint8 numberOfVouchers,
+        string memory name,
+        string memory symbol,
+        uint256 price
     ) public payable returns (uint256) {
-        require(numberOfTokens > 0, "Tokens cannot be less than 1");
+        require(numberOfVouchers > 0, "Vouchers cannot be less than 1");
         // require(msg.value > 0.01 ether, "Require a value of > 0.01 to create organization");
 
         //new organization object
         organization memory newOrg = organization(
             name,
+            symbol,
+            price,
             tx.origin,
-            numberOfTokens,
+            numberOfVouchers,
             orgState.invalid,
             block.timestamp
         );
 
+//        OrganizationVoucher newOrgVoucher = orgVoucherContract(
+//            name,
+//            symbol,
+//            price,
+//            numberOfVouchers
+//        );
+
+        // mint
         uint256 newOrgId = numOrgs++;
         organizations[newOrgId] = newOrg;
         return newOrgId;
@@ -70,8 +92,8 @@ contract Organization {
     }
 
     //get number of tokens with organization
-    function getOrgTokens(uint256 orgId) public view validOrgId(orgId) returns (uint256) {
-        return organizations[orgId].numberOfTokens;
+    function getOrgVouchers(uint256 orgId) public view validOrgId(orgId) returns (uint256) {
+        return organizations[orgId].numberOfVouchers;
     }
 
     // set the isVerified flag of organization
@@ -80,8 +102,12 @@ contract Organization {
     }
 
     //get organization Owner
-    function getOrgOwner(uint256 orgId) public view validOrgId(orgId) returns (address) {
+    function getOrgOwner(uint256 orgId) public view validOrgId(orgId) returns (address payable) {
         return organizations[orgId].owner;
+    }
+
+    function getVoucherPrice(uint256 orgId) public view validOrgId(orgId) returns (uint256) {
+        return organizations[orgId].price;
     }
 
 }

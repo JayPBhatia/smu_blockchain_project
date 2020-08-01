@@ -34,18 +34,13 @@ contract Market {
     }
 
     //Buy Vouchers from a listed organization
-    function buyVouchers(uint256 orgId, uint256 price, uint256 tokens) public {
-        require(listedOrgs[orgId] != 0, "Organization is not listed");
-        //is listed
-
-        // Probably need to keep a record of which organization has which vouchers
-        //Write logic to transfer tokens from organization to buyer
-
-        // require(price >= (listedOrgs[orgId]+ commissionFee), "Price is too low");
-        //  listPrice[diceId] = 0;
-        //  require(token.transferFrom(msg.sender, _owner, commissionFee), "D1");
-        //  require(token.transferFrom(msg.sender, prevOwner[diceId], (price - commissionFee)), "D2");
-        //  diceContract.transferFrom(address(this), msg.sender, diceId);
+    function buyVouchers(uint256 orgId, uint256 vouchers) public payable {
+        require(listedOrgs[orgId] >=vouchers, "vouchers listed in market");
+        uint256 voucherPrice = orgContract.getVoucherPrice(orgId);
+        uint256 voucherCost = voucherPrice * vouchers;
+        require(msg.value > commissionFee + voucherCost, "Require a value of > fee + tokenCost to buy tokens");
+        orgContract.getOrgOwner(orgId).transfer(voucherCost);
+        orgVoucherContract.transferFrom(msg.sender, address(this), vouchers);
     }
 
     //get owner of DiceMarket
