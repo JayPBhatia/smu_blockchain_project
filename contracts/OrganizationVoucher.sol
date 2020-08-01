@@ -84,9 +84,9 @@ contract BasicToken is ERC20Basic {
         maxTokens_ = max;
     }
 
-    function getMaxTokens(uint256 max) public view returns (uint256) {
-        return maxTokens_;
-    }
+    // function getMaxTokens(uint256 max) public view returns (uint256) {
+    //     return maxTokens_;
+    // }
     /**
     * @dev transfer token for a specified address
     * @param _to The address to transfer to.
@@ -308,19 +308,54 @@ contract MintableToken is StandardToken, Ownable {
 
 contract OrganizationVoucher is MintableToken {
 
-    string public name;
-    string public symbol;
-    uint256 public price;
+    struct voucher{
+    string name;
+    string symbol;
+    uint256 price;
+    uint256 numberOfVouchers;
+    }
     uint8 public constant decimals = 18;
 
-    constructor(string memory name_, string memory symbol_, uint256 price_, uint256 numberOfVouchers) public {
-        require(maxTokens_ >= totalSupply_ + numberOfVouchers , " current totalSupply_ + numberOfVouchers more then max allowed  " );
-        name = name_;
-        symbol =  symbol_;
-        price = price_;
-        totalSupply_ = totalSupply_.add(numberOfVouchers);
+    mapping(string => voucher) public allVouchers;
+    uint256 public numVouchers = 0;
+
+        // constructor(string memory name_, string memory symbol_, uint256 price_, uint256 numberOfVouchers) public {
+    //     require(maxTokens_ >= totalSupply_ + numberOfVouchers, " current totalSupply_ + numberOfVouchers more then max allowed  " );
+    //     name = name_;
+    //     symbol = symbol_;
+    //     price = price_;
+    //     totalSupply_ = totalSupply_.add(numberOfVouchers);
+    // }
+
+function addVoucher( string memory name, string memory symbol, uint256 price, uint256 numberOfVouchers) public returns (uint256) {
+        //new voucher object
+  require(maxTokens_ >= totalSupply_ + numberOfVouchers, " current totalSupply_ + numberOfVouchers more then max allowed.");
+         voucher memory newOrgVoucher = voucher(
+           name,
+           symbol,
+           price,
+           numberOfVouchers
+       );
+        uint256 voucherId = numVouchers++;
+       allVouchers[symbol] = newOrgVoucher;
+        return voucherId;
+
+}
+
+ //get voucher name
+    function getVoucherName(string memory symbol) public view  returns (voucher) {
+        return allVouchers[symbol].name;
     }
 
+     //get voucher count
+    function getVoucherCount(string memory symbol) public view  returns (voucher) {
+        return allVouchers[symbol].numberOfVouchers;
+    }
+
+     //get voucher price
+    function getVoucherPrice(string memory symbol) public view  returns (voucher) {
+        return allVouchers[symbol].price;
+    }
 
 
 }

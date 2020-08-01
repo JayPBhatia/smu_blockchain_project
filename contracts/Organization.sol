@@ -73,12 +73,12 @@ contract Organization {
             block.timestamp
         );
 
-//       voucher memory newOrgVoucher = orgVoucherContract.addVouchers(
-//            name,
-//            symbol,
-//            price,
-//            numberOfVouchers
-//        );
+      orgVoucherContract.addVoucher(
+           name,
+           symbol,
+           price,
+           numberOfVouchers
+       );
 
         // mint
         uint256 newOrgId = numOrgs++;
