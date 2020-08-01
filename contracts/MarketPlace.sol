@@ -20,10 +20,10 @@ contract Market {
 
 
     //Lists the vouchers from organization on the marketplace
-    function listOrganization(uint256 orgId, uint256 tokens) public {
+    function listOrganization(uint256 orgId, uint256 vouchers) public payable {
         require(orgContract.getOrgOwner(orgId) == msg.sender, "Only owner can list");
-        orgVoucherContract.transferFrom(msg.sender, address(this), tokens);
-        listedOrgs[orgId] = tokens;
+        orgVoucherContract.approve(address(this), vouchers);
+        listedOrgs[orgId] = vouchers;
     }
 
     function addTokens(uint256 orgId, uint256 tokens) public {
@@ -34,7 +34,8 @@ contract Market {
 
     //Buy Vouchers from a listed organization
     function buyVouchers(uint256 orgId, uint256 vouchers) public payable {
-        require(listedOrgs[orgId] >=vouchers, "vouchers listed in market");
+        require(listedOrgs[orgId] != 0, "vouchers not listed in market");
+        require(listedOrgs[orgId] >=vouchers, "not enough vouchers listed in market");
         uint256 voucherPrice = orgContract.getVoucherPrice(orgId);
         uint256 voucherCost = voucherPrice * vouchers;
         require(msg.value > commissionFee + voucherCost, "Require a value of > fee + tokenCost to buy tokens");

@@ -1,10 +1,11 @@
 pragma solidity ^0.5.0;
+
 import "./OrganizationVoucher.sol";
 
 contract Organization {
 
     OrganizationVoucher orgVoucherContract;  //reference to OrganizationVoucher
-    constructor( OrganizationVoucher orgVoucherAddress) public {
+    constructor(OrganizationVoucher orgVoucherAddress) public {
         orgVoucherContract = orgVoucherAddress;
     }
 
@@ -33,28 +34,32 @@ contract Organization {
 
     modifier validOrgId(uint256 orgId) {
         require(orgId < numOrgs, "Invalid organization Id");
-        require(organizations[orgId].isVerified==orgState.verified, "Organization is not verified");
+        require(organizations[orgId].isVerified == orgState.verified, "Organization is not verified");
         _;
     }
 
-    function addVouchers(uint256 orgId, uint256 x) public ownerOnly(orgId)  {
-        organizations[orgId].numberOfVouchers  += x;
+    function addVouchers(uint256 orgId, uint256 x) public ownerOnly(orgId) {
+        organizations[orgId].numberOfVouchers += x;
         // TODO call voucher add
     }
 
     function burnVouchers(uint256 orgId, uint256 x) public ownerOnly(orgId) {
-        organizations[orgId].numberOfVouchers  -= x;
+        organizations[orgId].numberOfVouchers -= x;
         // TODO call voucher burn
     }
 
-    function issueTokens(uint256 orgId, uint256 x) public ownerOnly(orgId) payable {
+    function buyVoucers(uint256 orgId, uint256 vouchers) public validOrgId(orgId) payable {
         // ntuc token issues to public
         // transfer of ownership of token
+        uint256 voucherPrice = getVoucherPrice(orgId);
+        uint256 voucherCost = voucherPrice * vouchers;
+        require(msg.value > voucherCost, "Require a value of > fee + tokenCost to buy tokens");
+        orgVoucherContract.transferFrom(msg.sender, address(this), vouchers);
     }
 
     //function to create a new Orgnization, and add to 'organizations' map. requires at least 0.01ETH to create
     function add(
-        uint8 numberOfVouchers,
+        uint256 numberOfVouchers,
         string memory name,
         string memory symbol,
         uint256 price
@@ -73,12 +78,12 @@ contract Organization {
             block.timestamp
         );
 
-      orgVoucherContract.addVoucher(
-           name,
-           symbol,
-           price,
-           numberOfVouchers
-       );
+        //       voucher memory newOrgVoucher = orgVoucherContract.addVouchers(
+        //            name,
+        //            symbol,
+        //            price,
+        //            numberOfVouchers
+        //        );
 
         // mint
         uint256 newOrgId = numOrgs++;
